@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roof Bid Evaluation — 5 Little Bear Hill Rd</title>
+<style>
+  :root{
+    --ink:#16243a;        /* blueprint navy */
+    --ink-2:#26384f;
+    --paper:#f4f1e9;      /* drafting paper */
+    --paper-2:#ece7da;
+    --copper:#b9603a;     /* shingle copper accent */
+    --copper-d:#8f4527;
+    --steel:#5b7184;      /* secondary */
+    --apex:#3a6b8f;       /* vendor A */
+    --express:#b9603a;    /* vendor B */
+    --line:rgba(22,36,58,.14);
+    --good:#3f7d52;
+    --warn:#b8860b;
+    --bad:#b3402f;
+    --shadow:0 1px 0 rgba(22,36,58,.05),0 8px 28px -18px rgba(22,36,58,.45);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  h1,h2,h3{line-height:1.15;letter-spacing:-.01em;font-weight:700}
+  .num{font-variant-numeric:tabular-nums lining-nums}
+
+  /* ridge motif divider */
+  .ridge{height:14px;width:100%;
+    background:repeating-linear-gradient(135deg,var(--ink) 0 2px,transparent 2px 14px) bottom/28px 14px no-repeat;
+    opacity:.5;margin:0}
+
+  /* ---- HERO ---- */
+  header.hero{background:var(--ink);color:var(--paper);padding:46px 0 40px;position:relative;overflow:hidden}
+  header.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:18px;
+    background:repeating-linear-gradient(135deg,var(--copper) 0 3px,transparent 3px 16px);opacity:.7}
+  .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#9fb2c4;margin:0 0 14px}
+  .hero h1{font-size:clamp(28px,5vw,46px);margin:0 0 6px}
+  .hero .sub{color:#c4d2df;font-size:16px;margin:0}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px 26px;margin-top:22px;font-size:13.5px;color:#aebfcd}
+  .hero-meta b{color:var(--paper);font-weight:600}
+
+  /* ---- VERDICT BAND ---- */
+  .verdict{background:var(--paper-2);border-bottom:1px solid var(--line)}
+  .verdict .wrap{display:grid;grid-template-columns:1.4fr 1fr;gap:30px;padding:30px 24px}
+  .verdict h2{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--steel);margin:0 0 10px}
+  .verdict .call{font-size:20px;margin:0 0 8px;font-weight:700}
+  .verdict p{margin:0;font-size:15px;color:var(--ink-2)}
+  .rank{display:flex;flex-direction:column;gap:10px}
+  .rank-row{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);
+    border-radius:10px;padding:12px 16px;box-shadow:var(--shadow)}
+  .rank-row .pos{font-size:13px;font-weight:700;color:#fff;background:var(--steel);
+    width:26px;height:26px;border-radius:50%;display:grid;place-items:center;flex:none}
+  .rank-row.win .pos{background:var(--copper)}
+  .rank-row .who{font-weight:700;flex:1}
+  .rank-row .score{font-size:22px;font-weight:700}
+  .rank-row .of{font-size:12px;color:var(--steel);font-weight:500}
+
+  /* ---- SECTIONS ---- */
+  section{padding:46px 0}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin:0 0 22px}
+  .sec-head .no{font-size:13px;font-weight:700;color:var(--copper);letter-spacing:.1em}
+  .sec-head h2{font-size:24px;margin:0}
+  .lead{color:var(--ink-2);max-width:62ch;margin:-8px 0 26px;font-size:15.5px}
+
+  /* ---- SCORECARD ---- */
+  .legend{display:flex;gap:20px;font-size:13px;margin:0 0 20px;align-items:center;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+  .swatch{width:13px;height:13px;border-radius:3px;display:inline-block}
+  .dim{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .dim-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px}
+  .dim-top .name{font-weight:700;font-size:16px}
+  .dim-top .name span{display:block;font-weight:500;font-size:12.5px;color:var(--steel);letter-spacing:.04em}
+  .bars{display:grid;gap:9px}
+  .bar-row{display:grid;grid-template-columns:64px 1fr 30px;align-items:center;gap:12px}
+  .bar-row .lbl{font-size:12.5px;font-weight:600;color:var(--ink-2)}
+  .track{height:14px;background:var(--paper-2);border-radius:7px;overflow:hidden}
+  .fill{height:100%;border-radius:7px;transform-origin:left;animation:grow .9s cubic-bezier(.2,.8,.2,1) both}
+  .fill.a{background:linear-gradient(90deg,var(--apex),#4d82a8)}
+  .fill.e{background:linear-gradient(90deg,var(--express),#cf7a52)}
+  .bar-row .v{font-size:14px;font-weight:700;text-align:right}
+  @keyframes grow{from{transform:scaleX(.02)}to{transform:scaleX(1)}}
+  .why{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;padding-top:13px;border-top:1px dashed var(--line)}
+  .why div{font-size:13px;color:var(--ink-2)}
+  .why b{color:var(--ink);font-weight:700}
+  @media (max-width:680px){.why{grid-template-columns:1fr}}
+
+  .composite{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+  .comp-card{background:var(--ink);color:var(--paper);border-radius:12px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center}
+  .comp-card.win{background:var(--copper)}
+  .comp-card .who{font-weight:700;font-size:16px}
+  .comp-card .who small{display:block;font-weight:500;opacity:.8;font-size:12px}
+  .comp-card .big{font-size:34px;font-weight:700}
+  .comp-card .big small{font-size:14px;opacity:.75;font-weight:500}
+
+  /* ---- TWO-COL DESCRIPTIONS ---- */
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media (max-width:760px){.vs,.composite,.verdict .wrap{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  .card-head{padding:16px 20px;border-bottom:3px solid}
+  .card-head.a{border-color:var(--apex)}
+  .card-head.e{border-color:var(--express)}
+  .card-head .co{font-size:18px;font-weight:700;margin:0}
+  .card-head .est{font-size:12.5px;color:var(--steel);margin:2px 0 0}
+  .card-head .price{font-size:26px;font-weight:700;margin-top:8px}
+  .card-head .price small{font-size:13px;color:var(--steel);font-weight:500}
+  .card-body{padding:16px 20px;font-size:13.5px}
+  .card-body dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 14px}
+  .card-body dt{font-weight:700;color:var(--ink)}
+  .card-body dd{margin:0;color:var(--ink-2)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:20px;margin:2px 4px 2px 0}
+  .tag.good{background:rgba(63,125,82,.12);color:var(--good)}
+  .tag.warn{background:rgba(184,134,11,.14);color:#8a6708}
+
+  /* ---- FINANCIAL ---- */
+  .fin{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 24px;box-shadow:var(--shadow)}
+  .toggle{display:inline-flex;background:var(--paper-2);border-radius:24px;padding:4px;gap:4px;margin:4px 0 22px}
+  .toggle button{border:0;background:transparent;font:inherit;font-size:13px;font-weight:600;color:var(--ink-2);
+    padding:7px 16px;border-radius:20px;cursor:pointer}
+  .toggle button.on{background:var(--ink);color:var(--paper)}
+  .fin-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  @media (max-width:680px){.fin-grid{grid-template-columns:1fr}}
+  .fin-cell{padding:16px 18px;border-right:1px solid var(--line)}
+  .fin-cell:last-child{border-right:0}
+  .fin-cell .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--steel);margin:0 0 6px}
+  .fin-cell .val{font-size:28px;font-weight:700;margin:0}
+  .fin-cell .val small{font-size:14px;font-weight:500;color:var(--steel)}
+  .fin-note{font-size:13px;color:var(--ink-2);margin:16px 0 0}
+  .flag{display:flex;gap:12px;align-items:flex-start;background:rgba(184,134,11,.1);border:1px solid rgba(184,134,11,.3);
+    border-radius:10px;padding:14px 16px;margin-top:18px}
+  .flag .mark{font-weight:800;color:#8a6708;flex:none}
+  .flag p{margin:0;font-size:13.5px;color:#5e4a08}
+
+  /* ---- MEMO ---- */
+  .memo{background:var(--ink);color:var(--paper);border-radius:14px;padding:34px 36px;box-shadow:var(--shadow)}
+  .memo h2{color:#fff;font-size:13px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 4px;color:#9fb2c4}
+  .memo .rec{font-size:22px;font-weight:700;margin:0 0 18px;color:#fff;line-height:1.3}
+  .memo .rec b{color:#e6a079}
+  .memo h3{font-size:14px;margin:22px 0 8px;color:#cdd9e4;letter-spacing:.02em}
+  .memo p{margin:0 0 10px;color:#d7e0ea;font-size:14.5px}
+  .memo ul{margin:0;padding-left:18px;color:#d7e0ea;font-size:14.5px}
+  .memo li{margin-bottom:7px}
+  .memo .pick{display:inline-block;padding:1px 7px;border-radius:5px;font-weight:700;font-size:13px}
+  .memo .pick.e{background:rgba(185,96,58,.3);color:#f0b393}
+  .memo .pick.a{background:rgba(58,107,143,.35);color:#a8cae0}
+
+  /* ---- METHODOLOGY / SOURCES ---- */
+  .method{background:var(--paper-2);border-radius:12px;padding:24px 26px}
+  .method ol{margin:0;padding-left:20px}
+  .method li{margin-bottom:10px;font-size:14px;color:var(--ink-2)}
+  .method li b{color:var(--ink)}
+  footer{background:var(--ink);color:#9fb2c4;padding:30px 0 40px;font-size:12.5px}
+  footer .wrap{display:grid;gap:6px}
+  footer a{color:#c4d2df}
+  footer .src{display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+  footer .src b{color:#cdd9e4;font-weight:600}
+  .disclaimer{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);max-width:70ch}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Contract Bid Evaluation</p>
+    <h1>Roof Replacement — 5 Little Bear Hill Rd</h1>
+    <p class="sub">Two competing bids, scored side by side for scope, quality, reputation, and value.</p>
+    <div class="hero-meta">
+      <span>Project: <b>Full roof tear-off &amp; replacement</b></span>
+      <span>Location: <b>Westford, MA</b></span>
+      <span>Bids evaluated: <b>2</b></span>
+      <span>Prepared: <b>June 22, 2026</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="verdict">
+  <div class="wrap">
+    <div>
+      <h2>The call</h2>
+      <p class="call">A near tie — value vs. peace of mind.</p>
+      <p>The two bids finish within a tenth of a point. <b>Express</b> wins on price, warranty length, and explicit garage coverage. <b>Apex</b> wins on installer credentials, proposal detail, and the strongest review record. Pick on what you weight more: roughly <b>$2,500–$3,500</b> in savings, or maximum install-quality certainty.</p>
+    </div>
+    <div class="rank">
+      <div class="rank-row win">
+        <span class="pos">1</span><span class="who">Express Roofing</span>
+        <span class="score num">4.3<span class="of"> /5</span></span>
+      </div>
+      <div class="rank-row">
+        <span class="pos">2</span><span class="who">Apex Roofing &amp; Restoration</span>
+        <span class="score num">4.2<span class="of"> /5</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ridge"></div>
+
+<!-- SCORECARD -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="no">01</span><h2>Scorecard</h2></div>
+    <p class="lead">Each bid is scored 1–5 on six equally weighted dimensions. Every score ties to a specific line in the contract or a cited review — open any row to see the reasoning.</p>
+    <div class="legend">
+      <span class="chip"><span class="swatch" style="background:var(--apex)"></span>Apex Roofing</span>
+      <span class="chip"><span class="swatch" style="background:var(--express)"></span>Express Roofing</span>
+      <span style="color:var(--steel)">Scale: 1 (weak) → 5 (strong)</span>
+    </div>
+
+    <!-- dimension template -->
+    <div class="dim">
+      <div class="dim-top"><div class="name">Scope coverage <span>How completely the bid addresses the full project</span></div></div>
+      <div class="bars">
+        <div class="bar-row"><span class="lbl">Apex</span><div class="track"><div class="fill a" style="width:80%"></div></div><span class="v">4</span></div>
+        <div class="bar-row"><span class="lbl">Express</span><div class="track"><div class="fill e" style="width:100%"></div></div><span class="v">5</span></div>
+      </div>
+      <div class="why">
+        <div><b>Apex 4 —</b> Full 2-layer tear-off and complete system, but scope reads "all roof sections of home"; the garage is not explicitly named the way Express's is.</div>
+        <div><b>Express 5 —</b> Full tear-off plus complete OC system, and explicitly covers <b>house &amp; garage</b> roofs with RhinoRoof underlayment and permits included.</div>
+      </div>
+    </div>
+
+    <div class="dim">
+      <div class="dim-top"><div class="name">Description thoroughness <span>Detail, specificity, and clarity of the proposal</span></div></div>
+      <div class="bars">
+        <div class="bar-row"><span class="lbl">Apex</span><div class="track"><div class="fill a" style="width:100%"></div></div><span class="v">5</span></div>
+        <div class="bar-row"><span class="lbl">Express</span><div class="track"><div class="fill e" style="width:80%"></div></div><span class="v">4</span></div>
+      </div>
+      <div class="why">
+        <div><b>Apex 5 —</b> Prices out every add-on (sheathing $2.85/sq ft, extra layers $0.65/sq ft, chimney $595, skylights $1,700–$2,100, gutters $6/lf) and names each CertainTeed component.</div>
+        <div><b>Express 4 —</b> Detailed scope and named OC products plus nail spec (8D ring shank), but leaves skylight/Velux costs as an open "extra charge."</div>
+      </div>
+    </div>
+
+    <div class="dim">
+      <div class="dim-top"><div class="name">Approach quality &amp; delivery <span>Methodology, timeline, staffing, risk handling</span></div></div>
+      <div class="bars">
+        <div class="bar-row"><span class="lbl">Apex</span><div class="track"><div class="fill a" style="width:100%"></div></div><span class="v">5</span></div>
+        <div class="bar-row"><span class="lbl">Express</span><div class="track"><div class="fill e" style="width:80%"></div></div><span class="v">4</span></div>
+      </div>
+      <div class="why">
+        <div><b>Apex 5 —</b> CertainTeed ShingleMaster <b>Premier</b>-credentialed installer; 6-nail/130 mph install, baffled ridge vent, driveway protection + porta-toilet, 6-week window.</div>
+        <div><b>Express 4 —</b> OC-certified with good craft (hand-nailed ridge vent, ring-shank re-nail), but heavy urgency framing and a tight done-by-6/30 timeline.</div>
+      </div>
+    </div>
+
+    <div class="dim">
+      <div class="dim-top"><div class="name">Public sentiment <span>Reputation from web-searched reviews</span></div></div>
+      <div class="bars">
+        <div class="bar-row"><span class="lbl">Apex</span><div class="track"><div class="fill a" style="width:100%"></div></div><span class="v">5</span></div>
+        <div class="bar-row"><span class="lbl">Express</span><div class="track"><div class="fill e" style="width:80%"></div></div><span class="v">4</span></div>
+      </div>
+      <div class="why">
+        <div><b>Apex 5 —</b> 4.9★ across 271 reviews (Birdeye/Angi), 5.0★ Reviewtec, BBB A+, top-4% BuildZoom; owner on every job. Only isolated negatives.</div>
+        <div><b>Express 4 —</b> Angi Super Service Award, GuildQuality-verified, 39 Checkbook reviews — strongly positive, with a few substantive complaints (attic-insulation debris, a scope-communication miss).</div>
+      </div>
+    </div>
+
+    <div class="dim">
+      <div class="dim-top"><div class="name">Cost <span>Price, normalized against the other bid (lower is better)</span></div></div>
+      <div class="bars">
+        <div class="bar-row"><span class="lbl">Apex</span><div class="track"><div class="fill a" style="width:60%"></div></div><span class="v">3</span></div>
+        <div class="bar-row"><span class="lbl">Express</span><div class="track"><div class="fill e" style="width:100%"></div></div><span class="v">5</span></div>
+      </div>
+      <div class="why">
+        <div><b>Apex 3 —</b> $14,996, the higher bid by ~$2,500 (≈$3,500 vs. Express's coupon price). Within market, but the premium option.</div>
+        <div><b>Express 5 —</b> $12,495 sticker ($11,495 with coupon) — the lower bid in the set. With only two bids the strict formula is degenerate, so the gap is scored on judgment, not a mechanical 5-vs-1.</div>
+      </div>
+    </div>
+
+    <div class="dim">
+      <div class="dim-top"><div class="name">Discount / value <span>Effective ROI — discounts, warranty, and terms</span></div></div>
+      <div class="bars">
+        <div class="bar-row"><span class="lbl">Apex</span><div class="track"><div class="fill a" style="width:60%"></div></div><span class="v">3</span></div>
+        <div class="bar-row"><span class="lbl">Express</span><div class="track"><div class="fill e" style="width:80%"></div></div><span class="v">4</span></div>
+      </div>
+      <div class="why">
+        <div><b>Apex 3 —</b> No discount; 25-yr workmanship warranty (half of Express's); but clean terms with no punitive late-payment clause.</div>
+        <div><b>Express 4 —</b> $1,000 coupon + 50-yr workmanship warranty drive real value — but the coupon deadline (6/15/26) has passed, and terms add 2.5%/mo (≈30% APR) on late balances.</div>
+      </div>
+    </div>
+
+    <div class="composite">
+      <div class="comp-card win">
+        <div class="who">Express Roofing<small>1st — value pick</small></div>
+        <div class="big num">4.3<small>/5</small></div>
+      </div>
+      <div class="comp-card">
+        <div class="who">Apex Roofing<small>2nd — premium pick</small></div>
+        <div class="big num">4.2<small>/5</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="ridge"></div>
+
+<!-- DESCRIPTIONS -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="no">02</span><h2>What each bid covers</h2></div>
+    <p class="lead">The substance pulled from each contract, side by side.</p>
+    <div class="vs">
+      <div class="card">
+        <div class="card-head a">
+          <p class="co">Apex Roofing &amp; Restoration</p>
+          <p class="est">Westford, MA · Est. 1991 · CertainTeed ShingleMaster Premier · BBB A+</p>
+          <p class="price num">$14,996 <small>no money down</small></p>
+        </div>
+        <div class="card-body">
+          <dl>
+            <dt>Shingle</dt><dd>CertainTeed Landmark architectural (6 nails, 130 mph)</dd>
+            <dt>Tear-off</dt><dd>Up to 2 layers, all roof sections of home</dd>
+            <dt>System</dt><dd>Grace ice &amp; water, synthetic underlayment, 8" drip edge, baffled ridge vent, ShadowRidge caps</dd>
+            <dt>Warranty</dt><dd>25-yr transferable workmanship + CertainTeed lifetime</dd>
+            <dt>Timeline</dt><dd>Within 6 weeks of signing</dd>
+            <dt>Permit</dt><dd>Included</dd>
+          </dl>
+          <div style="margin-top:12px">
+            <span class="tag good">Owner on every job</span>
+            <span class="tag good">Driveway + landscaping protection</span>
+            <span class="tag good">Itemized add-on pricing</span>
+            <span class="tag warn">Garage not named</span>
+            <span class="tag warn">No discount</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head e">
+          <p class="co">Express Roofing</p>
+          <p class="est">Chelmsford, MA · Est. 1985 · Owens Corning certified · ~450 roofs/yr</p>
+          <p class="price num">$12,495 <small>− $1,000 coupon*</small></p>
+        </div>
+        <div class="card-body">
+          <dl>
+            <dt>Shingle</dt><dd>Owens Corning Oak Ridge architectural (6 nails, 130 mph)</dd>
+            <dt>Tear-off</dt><dd>All asphalt — house &amp; garage roofs</dd>
+            <dt>System</dt><dd>OC WeatherLock ice &amp; water, RhinoRoof underlayment, 8" drip edge, hand-nailed Sure Vent, OC ridge caps</dd>
+            <dt>Warranty</dt><dd>50-yr workmanship + OC lifetime transferable (non-prorated)</dd>
+            <dt>Timeline</dt><dd>Roof done by 6/30/26 (coupon condition)</dd>
+            <dt>Permit</dt><dd>Included</dd>
+          </dl>
+          <div style="margin-top:12px">
+            <span class="tag good">Lowest price</span>
+            <span class="tag good">50-yr workmanship warranty</span>
+            <span class="tag good">House + garage explicit</span>
+            <span class="tag warn">Coupon deadline passed*</span>
+            <span class="tag warn">2.5%/mo late-payment interest</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="ridge"></div>
+
+<!-- FINANCIAL -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="no">03</span><h2>Financial review</h2></div>
+    <p class="lead">Base prices, the conditional discount, and the real gap between the bids. Toggle the coupon to see how much it actually swings the decision.</p>
+    <div class="fin">
+      <div class="toggle" role="group" aria-label="Coupon scenario">
+        <button id="btnWith" class="on" onclick="setCoupon(true)">Coupon honored</button>
+        <button id="btnWithout" onclick="setCoupon(false)">Coupon expired</button>
+      </div>
+      <div class="fin-grid">
+        <div class="fin-cell">
+          <p class="k">Apex (firm)</p>
+          <p class="val num">$14,996</p>
+        </div>
+        <div class="fin-cell">
+          <p class="k">Express (net)</p>
+          <p class="val num" id="expressVal">$11,495</p>
+        </div>
+        <div class="fin-cell">
+          <p class="k">Apex premium</p>
+          <p class="val num" id="gapVal">+$3,501 <small id="gapPct">(+30%)</small></p>
+        </div>
+      </div>
+      <p class="fin-note">Both quote no money down, payment in full at completion. Prices exclude conditional add-ons — sheathing/plywood if rot is found (<b>Apex</b> $2.85/sq ft &amp; $10/lineal ft; <b>Express</b> $98/sheet), chimney lead (<b>Apex</b> $595 · <b>Express</b> $495), and any skylight work. Have both confirm likely board replacement, since that's the variable most likely to move the final number.</p>
+      <div class="flag">
+        <span class="mark">⚑</span>
+        <p><b>Coupon attainability:</b> Express's $1,000 discount required sign-up by <b>6/15/2026</b> with the roof done by 6/30/2026. As of today (6/22/2026) that deadline has passed. Treat the $1,000 as <b>unconfirmed</b> until Express agrees in writing to honor it — even then, the 6/30 completion date is aggressive. Without the coupon, Express is still ~$2,500 cheaper than Apex.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="ridge"></div>
+
+<!-- MEMO -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="no">04</span><h2>Recommendation</h2></div>
+    <div class="memo">
+      <h2>Memo</h2>
+      <p class="rec">Lean <span class="pick e">Express Roofing</span> as the value choice — <b>but confirm the coupon first.</b> If install-quality certainty matters more than ~$2,500–$3,500, <span class="pick a">Apex</span> is the safe premium alternative.</p>
+
+      <h3>Why Express edges it</h3>
+      <p>On equal-weighted scoring it finishes first (4.3 vs 4.2). It's the lower bid by ~$2,500 (more with the coupon), carries a 50-year workmanship warranty against Apex's 25, and is the only bid that explicitly names the garage. The work scope and OC system are comparable to Apex's.</p>
+
+      <h3>Why it's close</h3>
+      <p>Apex brings the stronger quality signals: a CertainTeed ShingleMaster <b>Premier</b> credential (which backs its warranty), the owner on every job, and a near-flawless review record across 271+ ratings. Its proposal is also the more buttoned-up document. None of that is cheap insurance — it's worth roughly the price premium if a flawless install and the cleanest paper trail are what you value most.</p>
+
+      <h3>Before you sign</h3>
+      <ul>
+        <li><b>Call Express about the $1,000 coupon.</b> The 6/15 deadline has passed — get written confirmation they'll still honor it, or treat their price as $12,495.</li>
+        <li><b>Confirm the garage is in Apex's scope</b> in writing if you go that way ("all roof sections of home" is ambiguous).</li>
+        <li><b>Ask both for a likely board-replacement estimate.</b> Sheathing/plywood is the line item most likely to change the final cost.</li>
+        <li><b>Note Express's late-payment terms</b> (2.5%/mo + collection fees). A non-issue if you pay at completion, but worth knowing.</li>
+      </ul>
+      <p style="margin-top:16px;font-size:13px;color:#9fb2c4">Sentiment is one of six dimensions and the weakest signal of the set — both firms are well-reviewed, so let the contract substance and your own gut from meeting each owner carry the final call.</p>
+    </div>
+  </div>
+</section>
+
+<div class="ridge"></div>
+
+<!-- METHODOLOGY -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="no">05</span><h2>How this was scored</h2></div>
+    <div class="method">
+      <ol>
+        <li><b>Extraction.</b> Scope, cost, discounts, materials, timeline, warranty, and terms were pulled from each contract PDF.</li>
+        <li><b>Six dimensions, equal weight.</b> Scope coverage, description thoroughness, approach quality, public sentiment, cost, and discount/value — each 1–5, averaged into the composite.</li>
+        <li><b>Relative cost.</b> Cost and value are scored against each other, not an absolute scale. With only two bids the strict low=5/high=1 formula is degenerate, so the ~$2,500–3,500 gap was scored on judgment and stated as such.</li>
+        <li><b>Evidence-backed.</b> Every score points to a contract line or a cited review. Sentiment came from web search; where a vendor's public footprint is thin it's flagged rather than guessed.</li>
+        <li><b>Coverage beats price.</b> A cheaper bid that drops scope is penalized on coverage so it can't win on cost alone.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="src">
+      <b>Bids:</b><span>Apex Roofing &amp; Restoration LLC (6/15/26) · Express Roofing Inc. (6/11/26)</span>
+      <b>Apex reviews:</b><span>Angi · Birdeye (4.9★, 271) · Reviewtec (5.0★, 33) · BBB (A+) · BuildZoom (top 4%) · Nextdoor</span>
+      <b>Express reviews:</b><span>Angi (Super Service Award) · GuildQuality (verified) · Boston Consumers' Checkbook (39)</span>
+    </div>
+    <p class="disclaimer">Prepared as a decision aid from the two submitted bids and publicly available reviews as of June 22, 2026. Scores reflect the rubric described above; final selection is the homeowner's. Confirm all pricing, scope, and discount terms directly with each contractor before signing.</p>
+  </div>
+</footer>
+
+<script>
+  function setCoupon(on){
+    var express = on ? 11495 : 12495;
+    var apex = 14996;
+    var gap = apex - express;
+    var pct = Math.round(gap / express * 100);
+    document.getElementById('expressVal').textContent = '$' + express.toLocaleString();
+    document.getElementById('gapVal').innerHTML = '+$' + gap.toLocaleString() + ' <small id="gapPct">(+' + pct + '%)</small>';
+    document.getElementById('btnWith').classList.toggle('on', on);
+    document.getElementById('btnWithout').classList.toggle('on', !on);
+  }
+</script>
+</body>
+</html>
