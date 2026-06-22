@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roof Bid Evaluation (Final) — 5 Little Bear Hill Rd</title>
+<style>
+  :root{
+    --ink:#16243a;--ink-2:#26384f;--paper:#f4f1e9;--paper-2:#ece7da;
+    --copper:#b9603a;--copper-d:#8f4527;--steel:#5b7184;
+    --apex:#3a6b8f;--express:#b9603a;--line:rgba(22,36,58,.14);
+    --good:#3f7d52;--warn:#b8860b;--bad:#b3402f;
+    --shadow:0 1px 0 rgba(22,36,58,.05),0 8px 28px -18px rgba(22,36,58,.45);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  h1,h2,h3{line-height:1.15;letter-spacing:-.01em;font-weight:700}
+  .num{font-variant-numeric:tabular-nums lining-nums}
+  .ridge{height:14px;width:100%;background:repeating-linear-gradient(135deg,var(--ink) 0 2px,transparent 2px 14px) bottom/28px 14px no-repeat;opacity:.5;margin:0}
+
+  header.hero{background:var(--ink);color:var(--paper);padding:46px 0 40px;position:relative;overflow:hidden}
+  header.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:18px;background:repeating-linear-gradient(135deg,var(--copper) 0 3px,transparent 3px 16px);opacity:.7}
+  .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#9fb2c4;margin:0 0 14px;display:flex;gap:10px;align-items:center}
+  .eyebrow .rev{background:var(--good);color:#fff;padding:2px 9px;border-radius:20px;letter-spacing:.08em;font-weight:700}
+  .hero h1{font-size:clamp(28px,5vw,46px);margin:0 0 6px}
+  .hero .sub{color:#c4d2df;font-size:16px;margin:0}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px 26px;margin-top:22px;font-size:13.5px;color:#aebfcd}
+  .hero-meta b{color:var(--paper);font-weight:600}
+
+  .verdict{background:var(--paper-2);border-bottom:1px solid var(--line)}
+  .verdict .wrap{display:grid;grid-template-columns:1.4fr 1fr;gap:30px;padding:30px 24px}
+  .verdict h2{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--steel);margin:0 0 10px}
+  .verdict .call{font-size:20px;margin:0 0 8px;font-weight:700}
+  .verdict p{margin:0;font-size:15px;color:var(--ink-2)}
+  .rank{display:flex;flex-direction:column;gap:10px}
+  .rank-row{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 16px;box-shadow:var(--shadow)}
+  .rank-row .pos{font-size:13px;font-weight:700;color:#fff;background:var(--steel);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;flex:none}
+  .rank-row.win .pos{background:var(--copper)}
+  .rank-row .who{font-weight:700;flex:1}
+  .rank-row .score{font-size:22px;font-weight:700}
+  .rank-row .of{font-size:12px;color:var(--steel);font-weight:500}
+
+  section{padding:46px 0}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin:0 0 22px}
+  .sec-head .no{font-size:13px;font-weight:700;color:var(--copper);letter-spacing:.1em}
+  .sec-head h2{font-size:24px;margin:0}
+  .lead{color:var(--ink-2);max-width:64ch;margin:-8px 0 26px;font-size:15.5px}
+
+  .legend{display:flex;gap:20px;font-size:13px;margin:0 0 20px;align-items:center;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+  .swatch{width:13px;height:13px;border-radius:3px;display:inline-block}
+  .dim{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .dim-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px}
+  .dim-top .name{font-weight:700;font-size:16px}
+  .dim-top .name span{display:block;font-weight:500;font-size:12.5px;color:var(--steel);letter-spacing:.04em}
+  .bars{display:grid;gap:9px}
+  .bar-row{display:grid;grid-template-columns:64px 1fr 30px;align-items:center;gap:12px}
+  .bar-row .lbl{font-size:12.5px;font-weight:600;color:var(--ink-2)}
+  .track{height:14px;background:var(--paper-2);border-radius:7px;overflow:hidden}
+  .fill{height:100%;border-radius:7px;transform-origin:left;animation:grow .9s cubic-bezier(.2,.8,.2,1) both}
+  .fill.a{background:linear-gradient(90deg,var(--apex),#4d82a8)}
+  .fill.e{background:linear-gradient(90deg,var(--express),#cf7a52)}
+  .bar-row .v{font-size:14px;font-weight:700;text-align:right}
+  @keyframes grow{from{transform:scaleX(.02)}to{transform:scaleX(1)}}
+  .why{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;padding-top:13px;border-top:1px dashed var(--line)}
+  .why div{font-size:13px;color:var(--ink-2)}
+  .why b{color:var(--ink);font-weight:700}
+  @media (max-width:680px){.why{grid-template-columns:1fr}}
+
+  .composite{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+  .comp-card{background:var(--ink);color:var(--paper);border-radius:12px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center}
+  .comp-card.win{background:var(--copper)}
+  .comp-card .who{font-weight:700;font-size:16px}
+  .comp-card .who small{display:block;font-weight:500;opacity:.8;font-size:12px}
+  .comp-card .big{font-size:34px;font-weight:700}
+  .comp-card .big small{font-size:14px;opacity:.75;font-weight:500}
+
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media (max-width:760px){.vs,.composite,.verdict .wrap{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  .card-head{padding:16px 20px;border-bottom:3px solid}
+  .card-head.a{border-color:var(--apex)}
+  .card-head.e{border-color:var(--express)}
+  .card-head .co{font-size:18px;font-weight:700;margin:0}
+  .card-head .est{font-size:12.5px;color:var(--steel);margin:2px 0 0}
+  .card-head .price{font-size:26px;font-weight:700;margin-top:8px}
+  .card-head .price small{font-size:13px;color:var(--steel);font-weight:500}
+  .card-head .price .strike{text-decoration:line-through;color:var(--steel);font-weight:500;font-size:16px;margin-right:6px}
+  .card-body{padding:16px 20px;font-size:13.5px}
+  .card-body dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 14px}
+  .card-body dt{font-weight:700;color:var(--ink)}
+  .card-body dd{margin:0;color:var(--ink-2)}
+  .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:20px;margin:2px 4px 2px 0}
+  .tag.good{background:rgba(63,125,82,.12);color:var(--good)}
+  .tag.warn{background:rgba(184,134,11,.14);color:#8a6708}
+
+  .fin{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 24px;box-shadow:var(--shadow)}
+  .fin-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  @media (max-width:680px){.fin-grid{grid-template-columns:1fr}}
+  .fin-cell{padding:16px 18px;border-right:1px solid var(--line)}
+  .fin-cell:last-child{border-right:0}
+  .fin-cell.hi{background:rgba(63,125,82,.08)}
+  .fin-cell .k{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--steel);margin:0 0 6px}
+  .fin-cell .val{font-size:26px;font-weight:700;margin:0}
+  .fin-cell .val small{font-size:13px;font-weight:500;color:var(--steel)}
+  .fin-cell .sub2{font-size:12px;color:var(--steel);margin:4px 0 0}
+  .fin-note{font-size:13px;color:var(--ink-2);margin:16px 0 0}
+  .flag{display:flex;gap:12px;align-items:flex-start;border-radius:10px;padding:14px 16px;margin-top:14px}
+  .flag.warn{background:rgba(184,134,11,.1);border:1px solid rgba(184,134,11,.3)}
+  .flag.warn .mark{color:#8a6708}
+  .flag.info{background:rgba(63,125,82,.08);border:1px solid rgba(63,125,82,.28)}
+  .flag.info .mark{color:var(--good)}
+  .flag .mark{font-weight:800;flex:none}
+  .flag p{margin:0;font-size:13.5px;color:var(--ink-2)}
+  .flag.warn p{color:#5e4a08}
+
+  .memo{background:var(--ink);color:var(--paper);border-radius:14px;padding:34px 36px;box-shadow:var(--shadow)}
+  .memo h2{font-size:13px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 4px;color:#9fb2c4}
+  .memo .rec{font-size:22px;font-weight:700;margin:0 0 18px;color:#fff;line-height:1.3}
+  .memo .rec b{color:#e6a079}
+  .memo h3{font-size:14px;margin:22px 0 8px;color:#cdd9e4;letter-spacing:.02em}
+  .memo p{margin:0 0 10px;color:#d7e0ea;font-size:14.5px}
+  .memo ul{margin:0;padding-left:18px;color:#d7e0ea;font-size:14.5px}
+  .memo li{margin-bottom:7px}
+  .memo .pick{display:inline-block;padding:1px 7px;border-radius:5px;font-weight:700;font-size:13px}
+  .memo .pick.e{background:rgba(185,96,58,.3);color:#f0b393}
+  .memo .pick.a{background:rgba(58,107,143,.35);color:#a8cae0}
+
+  .method{background:var(--paper-2);border-radius:12px;padding:24px 26px}
+  .method ol{margin:0;padding-left:20px}
+  .method li{margin-bottom:10px;font-size:14px;color:var(--ink-2)}
+  .method li b{color:var(--ink)}
+  footer{background:var(--ink);color:#9fb2c4;padding:30px 0 40px;font-size:12.5px}
+  footer .wrap{display:grid;gap:6px}
+  footer .src{display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+  footer .src b{color:#cdd9e4;font-weight:600}
+  .disclaimer{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);max-width:72ch}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow"><span class="rev">Final</span> Contract Bid Evaluation</p>
+    <h1>Roof + Skylights — 5 Little Bear Hill Rd</h1>
+    <p class="sub">Like-for-like: Express with its $1,000 discount vs. Apex matched to the same skylight scope.</p>
+    <div class="hero-meta">
+      <span>Project: <b>Roof tear-off + 2 new skylights</b></span>
+      <span>Location: <b>Westford, MA</b></span>
+      <span>Basis: <b>Scope-matched</b></span>
+      <span>Prepared: <b>June 22, 2026</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="verdict">
+  <div class="wrap">
+    <div>
+      <h2>The call</h2>
+      <p class="call">Express Roofing — the value <em>and</em> the spec.</p>
+      <p>On a matched basis, <b>Express lands at $17,095</b> (after its confirmed $1,000 discount) against <b>Apex at $19,196</b> — about <b>$2,100 less (~12%)</b>, and Express's skylights are <em>solar opening with shades</em> versus Apex's manual venting. Apex remains the stronger pick on installer credentials and reviews; the question is whether that's worth ~$2,100.</p>
+    </div>
+    <div class="rank">
+      <div class="rank-row win">
+        <span class="pos">1</span><span class="who">Express Roofing</span>
+        <span class="score num">4.4<span class="of"> /5</span></span>
+      </div>
+      <div class="rank-row">
+        <span class="pos">2</span><span class="who">Apex Roofing &amp; Restoration</span>
+        <span class="score num">4.2<span class="of"> /5</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ridge"></div>
+
+<!-- BASIS -->
+<section style="padding-bottom:8px">
+  <div class="wrap">
+    <div class="sec-head"><span class="no">00</span><h2>Comparison basis</h2></div>
+    <div class="flag info">
+      <span class="mark">=</span>
+      <p>Both bids are now leveled to the same scope (roof + 2 new skylights). <b>Express:</b> revised 6/22 quote of $18,095, less the <b>$1,000 discount you've confirmed</b> = <b>$17,095</b>, solar skylights and shades included. <b>Apex:</b> $14,996 roof plus <b>2 × $2,100 venting skylights</b> = <b>$19,196</b>. One spec note carries through: Apex's matched units are manual venting, while Express's are solar opening with shades — so even at par on price, Express is the higher-spec install.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SCORECARD -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="no">01</span><h2>Scorecard</h2></div>
+    <p class="lead">Five equally weighted dimensions, scored 1–5 against the matched scope. Every score ties to a contract line or a cited review.</p>
+    <div class="legend">
+      <span class="chip"><span class="swatch" style="background:var(--apex)"></span>Apex Roofing</span>
+      <span class="chip"><span class="swatch" style="background:var(--express)"></span>Express Roofing</span>
+      <span style="color:var(--steel)">Scale: 1 (weak) → 5 (strong)</span>
+    </div>
+
+    <div class="dim">
+      <div class="dim-top"><div class="name">Scope coverage <span>How completely the bid addresses the matched project</span></div></div>
+      <div class="bars">
+        <div class="bar-row"><span class="lbl">Apex</span><div class="track"><div class="fill a" style="width:80%"></div></div><span class="v">4</span></div>
+        <div class="bar-row"><span class="lbl">Express</span><div class="track"><div class="fill e" style="width:100%"></div></div><span class="v">5</span></div>
+      </div>
+      <div class="why">
+        <div><b>Apex 4 —</b> Covers roof + skylights once the $2,100 add-on is elected, but the units are venting (not solar) and interior trim is excluded — just shy of Express's integrated package.</div>
+        <div><b>Express 5 —</b> One quote covering roof, garage, and full solar skylight replacement (units, shades, flashing, ice &amp; water).</div>
+      </div>
+    </div>
+
+    <div class="dim">
+      <div class="dim-top"><div class="name">Description thoroughness <span>Detail, specificity, and clarity of the proposal</span></div></div>
+      <div class="bars">
+        <div class="bar-row"><span class="lbl">Apex</span><div class="track"><div class="fill a" style="width:80%"></div></div><span class="v">4</span></div>
+        <div class="bar-row"><span class="lbl">Express</span><div class="track"><div class="fill e" style="width:80%"></div></div><span class="v">4</span></div>
+      </div>
+      <div class="why">
+        <div><b>Apex 4 —</b> The most itemized roofing document of the two, but the skylights ride on a one-line add-on price rather than a spelled-out scope.</div>
+        <div><b>Express 4 —</b> Skylight scope spelled out line by line; a few "if needed" items remain and interior trim is excluded.</div>
+      </div>
+    </div>
+
+    <div class="dim">
+      <div class="dim-top"><div class="name">Approach quality &amp; delivery <span>Methodology, timeline, staffing, risk handling</span></div></div>
+      <div class="bars">
+        <div class="bar-row"><span class="lbl">Apex</span><div class="track"><div class="fill a" style="width:100%"></div></div><span class="v">5</span></div>
+        <div class="bar-row"><span class="lbl">Express</span><div class="track"><div class="fill e" style="width:80%"></div></div><span class="v">4</span></div>
+      </div>
+      <div class="why">
+        <div><b>Apex 5 —</b> CertainTeed ShingleMaster <b>Premier</b> installer; 6-nail/130 mph, baffled ridge vent, driveway protection, 6-week window.</div>
+        <div><b>Express 4 —</b> OC-certified with good craft (hand-nailed vent, ring-shank re-nail); timeline runs tight, but the pushy framing is gone this round.</div>
+      </div>
+    </div>
+
+    <div class="dim">
+      <div class="dim-top"><div class="name">Public sentiment <span>Reputation from web-searched reviews</span></div></div>
+      <div class="bars">
+        <div class="bar-row"><span class="lbl">Apex</span><div class="track"><div class="fill a" style="width:100%"></div></div><span class="v">5</span></div>
+        <div class="bar-row"><span class="lbl">Express</span><div class="track"><div class="fill e" style="width:80%"></div></div><span class="v">4</span></div>
+      </div>
+      <div class="why">
+        <div><b>Apex 5 —</b> 4.9★ across 271 reviews, 5.0★ Reviewtec, BBB A+, top-4% BuildZoom; owner on every job.</div>
+        <div><b>Express 4 —</b> Angi Super Service Award, GuildQuality-verified, 39 Checkbook reviews — strongly positive, a few substantive complaints.</div>
+      </div>
+    </div>
+
+    <div class="dim">
+      <div class="dim-top"><div class="name">Cost &amp; value <span>Scope-matched price, with discount, warranty, inclusions, and terms folded in</span></div></div>
+      <div class="bars">
+        <div class="bar-row"><span class="lbl">Apex</span><div class="track"><div class="fill a" style="width:60%"></div></div><span class="v">3</span></div>
+        <div class="bar-row"><span class="lbl">Express</span><div class="track"><div class="fill e" style="width:100%"></div></div><span class="v">5</span></div>
+      </div>
+      <div class="why">
+        <div><b>Apex 3 —</b> $19,196 matched (~$2,100 / ≈12% above Express), no discount, a 25-yr workmanship warranty, and venting (non-solar) skylights — though terms are clean with no penalty clauses.</div>
+        <div><b>Express 5 —</b> $17,095 net after the confirmed $1,000 discount — lowest price, plus solar skylights + shades, a 50-yr workmanship warranty, and one firm number. Best overall value, even with the 2.5%/mo late-payment clause.</div>
+      </div>
+    </div>
+
+    <div class="composite">
+      <div class="comp-card win">
+        <div class="who">Express Roofing<small>1st — value + spec</small></div>
+        <div class="big num">4.4<small>/5</small></div>
+      </div>
+      <div class="comp-card">
+        <div class="who">Apex Roofing<small>2nd — premium / track record</small></div>
+        <div class="big num">4.2<small>/5</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="ridge"></div>
+
+<!-- DESCRIPTIONS -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="no">02</span><h2>What each bid covers</h2></div>
+    <p class="lead">The substance pulled from each contract, matched to the same scope.</p>
+    <div class="vs">
+      <div class="card">
+        <div class="card-head a">
+          <p class="co">Apex Roofing &amp; Restoration</p>
+          <p class="est">Westford, MA · Est. 1991 · CertainTeed ShingleMaster Premier · BBB A+</p>
+          <p class="price num">$19,196 <small>matched ($14,996 roof + 2 × $2,100)</small></p>
+        </div>
+        <div class="card-body">
+          <dl>
+            <dt>Shingle</dt><dd>CertainTeed Landmark architectural (6 nails, 130 mph)</dd>
+            <dt>Tear-off</dt><dd>Up to 2 layers, all roof sections of home</dd>
+            <dt>Skylights</dt><dd>2 × Velux <b>venting</b> (VS-S06) @ $2,100; interior trim excluded</dd>
+            <dt>Warranty</dt><dd>25-yr transferable workmanship + CertainTeed lifetime</dd>
+            <dt>Timeline</dt><dd>Within 6 weeks of signing</dd>
+            <dt>Permit</dt><dd>Included</dd>
+          </dl>
+          <div style="margin-top:12px">
+            <span class="tag good">Owner on every job</span>
+            <span class="tag good">Premier installer credential</span>
+            <span class="tag good">Best review record</span>
+            <span class="tag warn">Venting (non-solar) skylights</span>
+            <span class="tag warn">~$2,100 more</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head e">
+          <p class="co">Express Roofing <span style="font-size:11px;font-weight:700;color:var(--copper);letter-spacing:.06em">· REVISED 6/22</span></p>
+          <p class="est">Chelmsford, MA · Est. 1985 · Owens Corning certified · ~450 roofs/yr</p>
+          <p class="price num"><span class="strike">$18,095</span>$17,095 <small>net, all-in</small></p>
+        </div>
+        <div class="card-body">
+          <dl>
+            <dt>Shingle</dt><dd>Owens Corning Oak Ridge architectural (6 nails, 130 mph)</dd>
+            <dt>Tear-off</dt><dd>All asphalt — house &amp; garage roofs</dd>
+            <dt>Skylights</dt><dd>2 × Velux <b>solar opening</b> + solar shades, flashing kits, ice &amp; water (interior trim excluded)</dd>
+            <dt>Warranty</dt><dd>50-yr workmanship + OC lifetime transferable (non-prorated)</dd>
+            <dt>Accept by</dt><dd>6/29/2026</dd>
+            <dt>Permit</dt><dd>Included</dd>
+          </dl>
+          <div style="margin-top:12px">
+            <span class="tag good">Lowest price</span>
+            <span class="tag good">Solar skylights + shades</span>
+            <span class="tag good">$1,000 discount confirmed</span>
+            <span class="tag good">50-yr workmanship warranty</span>
+            <span class="tag warn">2.5%/mo late-payment interest</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="ridge"></div>
+
+<!-- FINANCIAL -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="no">03</span><h2>Financial review</h2></div>
+    <p class="lead">Leveled to the same scope, with your confirmed inputs: Express's $1,000 discount and Apex's $2,100 venting skylights.</p>
+    <div class="fin">
+      <div class="fin-grid">
+        <div class="fin-cell">
+          <p class="k">Apex — matched</p>
+          <p class="val num">$19,196</p>
+          <p class="sub2">$14,996 roof + 2 × $2,100 venting</p>
+        </div>
+        <div class="fin-cell hi">
+          <p class="k">Express — net</p>
+          <p class="val num">$17,095</p>
+          <p class="sub2">$18,095 − $1,000 discount, solar</p>
+        </div>
+        <div class="fin-cell">
+          <p class="k">You save with Express</p>
+          <p class="val num">$2,101 <small>(~12%)</small></p>
+          <p class="sub2">and get the higher skylight spec</p>
+        </div>
+      </div>
+      <p class="fin-note">Both quote no money down, payment in full at completion. Conditional extras still apply on both for sheathing/plywood if rot is found (Apex $2.85/sq ft &amp; $10/lineal ft; Express $98/sheet) and chimney lead (Apex $595 · Express $495) — these can move either number, so ask both what they expect to find.</p>
+      <div class="flag warn">
+        <span class="mark">⚑</span>
+        <p><b>Get both terms in writing.</b> Have Express note the $1,000 discount and the solar skylight models on the signed proposal, and have Apex confirm the $2,100 venting price, interior-trim handling, and that the garage is included. The spec gap (solar vs venting) is real value — factor it in beyond the headline $2,100.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="ridge"></div>
+
+<!-- MEMO -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="no">04</span><h2>Recommendation</h2></div>
+    <div class="memo">
+      <h2>Memo</h2>
+      <p class="rec">Go with <span class="pick e">Express Roofing</span> at $17,095. It's ~$2,100 cheaper than a matched Apex, installs the higher-spec solar skylights, and carries the longer warranty. Choose <span class="pick a">Apex</span> instead only if its credential and review record are worth the premium to you.</p>
+
+      <h3>Why Express</h3>
+      <p>On the matched scope it wins on several fronts: lower price, solar skylights vs venting, a 50-year workmanship warranty against Apex's 25, explicit garage coverage, and a confirmed discount. The roofing systems themselves (OC vs CertainTeed architectural, 6-nail/130 mph) are equivalent in quality tier.</p>
+
+      <h3>The case for paying more for Apex</h3>
+      <p>Apex is the stronger outfit on paper: a CertainTeed ShingleMaster <b>Premier</b> credential that backs its warranty, the owner on every job, and a near-flawless record across 271+ reviews vs. Express's strong-but-spottier history. If a flawless install and the cleanest track record matter more to you than ~$2,100 and a solar upgrade, Apex is the defensible splurge.</p>
+
+      <h3>Before you sign</h3>
+      <ul>
+        <li><b>Express:</b> get the $1,000 discount and the exact solar skylight models written onto the signed proposal; confirm the 6/29 timeline works for you.</li>
+        <li><b>Apex:</b> confirm the $2,100 venting price in writing, whether the garage is in scope, and how interior skylight trim is handled.</li>
+        <li><b>Both:</b> ask what board replacement they expect — sheathing/plywood is the likeliest surprise on the final invoice.</li>
+      </ul>
+      <p style="margin-top:16px;font-size:13px;color:#9fb2c4">Both firms are well-reviewed; sentiment is the weakest of the five signals. The numbers point to Express — let your read of each owner settle any remaining doubt.</p>
+    </div>
+  </div>
+</section>
+
+<div class="ridge"></div>
+
+<!-- METHODOLOGY -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><span class="no">05</span><h2>How this was scored</h2></div>
+    <div class="method">
+      <ol>
+        <li><b>Extraction.</b> Scope, cost, materials, timeline, warranty, and terms pulled from each contract, including Express's revised 6/22 proposal.</li>
+        <li><b>Scope normalization.</b> Apex's roof-only bid was built up to the same scope (+ 2 × $2,100 venting skylights) and Express's confirmed $1,000 discount applied, so the comparison is true like-for-like.</li>
+        <li><b>Spec-match note.</b> Apex's matched skylights are venting; Express's are solar opening with shades — flagged so the equal price isn't read as equal product.</li>
+        <li><b>Five dimensions, equal weight.</b> Scope, thoroughness, approach, sentiment, and a combined <b>cost &amp; value</b> (price plus discount, warranty, inclusions, and terms) — each 1–5, averaged into the composite.</li>
+        <li><b>Evidence-backed.</b> Every score points to a contract line or a cited review; sentiment came from web search.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="src">
+      <b>Bids:</b><span>Apex Roofing &amp; Restoration LLC (6/15/26, roof + elected $2,100 skylights) · Express Roofing Inc. (revised 6/22/26, roof + solar skylights, $1,000 discount)</span>
+      <b>Apex reviews:</b><span>Angi · Birdeye (4.9★, 271) · Reviewtec (5.0★, 33) · BBB (A+) · BuildZoom (top 4%) · Nextdoor</span>
+      <b>Express reviews:</b><span>Angi (Super Service Award) · GuildQuality (verified) · Boston Consumers' Checkbook (39)</span>
+    </div>
+    <p class="disclaimer">Prepared as a decision aid from the submitted bids and publicly available reviews as of June 22, 2026, using your confirmed inputs (Express $1,000 discount; Apex $2,100 venting skylights). Confirm all pricing, scope, skylight specs, discounts, and terms directly with each contractor before signing.</p>
+  </div>
+</footer>
+</body>
+</html>
